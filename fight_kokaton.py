@@ -9,6 +9,7 @@ WIDTH = 1100  # ゲームウィンドウの幅
 HEIGHT = 650  # ゲームウィンドウの高さ
 NUM_OF_BOMBS = 5  # 爆弾の数
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+num = 0
 
 
 def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
@@ -141,6 +142,33 @@ class Bomb:
         screen.blit(self.img, self.rct)
 
 
+class Score:
+    """
+    撃ち落した爆弾の数に関するクラス
+    """
+    def __init__(self):
+        """
+        文字を生成する
+        色や座標の設定
+        """
+        self.fonto = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)  # フォント設定
+        self.num = 0  # スコアの初期設定
+        self.img = self.fonto.render("スコア:"+str(self.num), 0, (0, 0, 255))  # 文字色の設定
+        self.rct = self.img.get_rect()
+        self.rct.center = (100, HEIGHT-50)  # 中心座標の設定
+        
+
+    def update(self, screen: pg.Surface):
+        """
+        画面に表示させる
+        引数 screen:画面Surface
+        """
+        self.img = self.fonto.render("スコア:"+str(self.num), 0, (0, 0, 255))  # 文字列Surfaceの生成
+        screen.blit(self.img, self.rct)
+
+
+
+
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))    
@@ -150,6 +178,7 @@ def main():
     # bomb = Bomb((255, 0, 0), 10)
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
     clock = pg.time.Clock()
+    score = Score()
     tmr = 0
     while True:
         for event in pg.event.get():
@@ -175,9 +204,10 @@ def main():
         # if beam is not None and bomb is not None:
         for j, bomb in enumerate(bombs):
             if beam is not None:
-                if beam.rct.colliderect(bomb.rct):  # ビー  ムと爆弾の衝突判定
+                if beam.rct.colliderect(bomb.rct):  # ビームと爆弾の衝突判定
                     beam = None
                     bombs[j] = None
+                    score.num += 1  # スコアを１点追加する
                     bird.change_img(6,screen)
             bombs = [bomb for bomb in bombs if bomb is not None]  # 撃ち落されていない爆弾のみのリスト
         
@@ -188,6 +218,7 @@ def main():
             beam.update(screen) 
         for bomb in bombs:
             bomb.update(screen)
+        score.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
