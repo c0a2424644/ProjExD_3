@@ -9,7 +9,6 @@ WIDTH = 1100  # ゲームウィンドウの幅
 HEIGHT = 650  # ゲームウィンドウの高さ
 NUM_OF_BOMBS = 5  # 爆弾の数
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-num = 0
 
 
 def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
@@ -179,6 +178,7 @@ def main():
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
     clock = pg.time.Clock()
     score = Score()
+    beam_list = []
     tmr = 0
     while True:
         for event in pg.event.get():
@@ -186,7 +186,8 @@ def main():
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 # スペースキー押下でBeamクラスのインスタンス生成
-                beam = Beam(bird)            
+                beam = Beam(bird)
+                beam_list.append(beam)  # ビームのインスタンスをbeam_listに入れる           
         screen.blit(bg_img, [0, 0])
         
         # if bomb is not None:
@@ -202,19 +203,21 @@ def main():
                 return
             
         # if beam is not None and bomb is not None:
-        for j, bomb in enumerate(bombs):
-            if beam is not None:
+        for i, beam in enumerate(beam_list):
+            for j, bomb in enumerate(bombs):
+                # if beam is not None:
                 if beam.rct.colliderect(bomb.rct):  # ビームと爆弾の衝突判定
-                    beam = None
+                    beam_list[i] = None
                     bombs[j] = None
                     score.num += 1  # スコアを１点追加する
                     bird.change_img(6,screen)
             bombs = [bomb for bomb in bombs if bomb is not None]  # 撃ち落されていない爆弾のみのリスト
+            beam_list = [beam for beam in beam_list if (beam is not None) and (check_bound(beam.rct) == (True,True))]  # 衝突しておらず画面の範囲内のビームのみのリスト
         
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
-        if beam is not None:
+        for beam in beam_list: 
             beam.update(screen) 
         for bomb in bombs:
             bomb.update(screen)
@@ -222,6 +225,8 @@ def main():
         pg.display.update()
         tmr += 1
         clock.tick(50)
+        print(len(beam_list))
+
 
 
 if __name__ == "__main__":
